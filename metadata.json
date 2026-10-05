@@ -1,0 +1,6 @@
+{
+  "name": "PRISM — Personal Reality & Intelligent Skill Mapping",
+  "description": "A career intelligence platform for college students. Map your skills, projects, and career goals to know where you stand, what you're missing, and what to do next.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
