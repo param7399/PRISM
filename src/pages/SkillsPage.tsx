@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, SlidersHorizontal } from 'lucide-react';
+import { Plus, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 import { usePrism } from '../context/PrismContext';
 import { Skill, SkillCategory, SkillLevel } from '../types';
 import { Modal } from '../components/common/Modal';
+import { evaluateSkillEvidence } from '../services/aiService';
+import { SkillJourneyGraph } from '../components/skills/SkillJourneyGraph';
 
 const CATEGORIES: SkillCategory[] = [
   'Programming',
@@ -27,6 +29,10 @@ export const SkillsPage: React.FC = () => {
     ? student.skills.find((s) => s.id === selectedSkill.id) || selectedSkill
     : null;
 
+  const activeModalEval = activeModalSkill
+    ? evaluateSkillEvidence(student, activeModalSkill)
+    : null;
+
   const handleAddSkillSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSkillName.trim()) return;
@@ -41,10 +47,10 @@ export const SkillsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            My Skills
+            Skills &amp; Evidence
           </h1>
           <p className="mt-1 text-sm sm:text-base text-slate-600 dark:text-slate-300">
-            Here&apos;s where you stand right now. Click any skill to see what to learn next or update your level.
+            PRISM separates what you know from what you have actually proven with projects.
           </p>
         </div>
         <button
@@ -56,6 +62,14 @@ export const SkillsPage: React.FC = () => {
           <span>Add Skill</span>
         </button>
       </div>
+
+      {/* Interactive Career Journey Skill Graph */}
+      <SkillJourneyGraph
+        student={student}
+        onPrioritizeNode={(skillName, recommendedStep, whyItMatters) =>
+          makeSkillNextAction(skillName, recommendedStep, whyItMatters)
+        }
+      />
 
       {/* Categories & Skill Cards */}
       <div className="space-y-10">
@@ -74,6 +88,8 @@ export const SkillsPage: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {categorySkills.map((skill) => {
+                  const intel = evaluateSkillEvidence(student, skill);
+
                   const statusColor =
                     skill.status === 'Strong'
                       ? 'text-emerald-600 dark:text-emerald-400'
@@ -92,6 +108,13 @@ export const SkillsPage: React.FC = () => {
                       ? 'bg-amber-500'
                       : 'bg-red-500';
 
+                  const evidenceColor =
+                    intel.evidenceLevel === 'Strong'
+                      ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                      : intel.evidenceLevel === 'Moderate'
+                      ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                      : 'text-amber-600 dark:text-amber-400 font-semibold';
+
                   return (
                     <button
                       key={skill.id}
@@ -104,26 +127,13 @@ export const SkillsPage: React.FC = () => {
                           <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {skill.name}
                           </h3>
-                          <span className={`text-xs font-medium ${statusColor}`}>
-                            {skill.status}
+                          <span className={`text-xs font-mono font-bold tabular-nums ${statusColor}`}>
+                            {skill.score}%
                           </span>
                         </div>
 
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                          Level: {skill.level}
-                          <span aria-hidden="true"> · </span>
-                          Gap: {Math.max(0, skill.targetScore - skill.score)}%
-                        </p>
-
-                        <div className="mt-4 space-y-1.5">
-                          <div className="flex items-center justify-between text-xs font-mono tabular-nums">
-                            <span className="text-slate-700 dark:text-slate-200 font-semibold">
-                              Current: {skill.score}%
-                            </span>
-                            <span className="text-slate-400 dark:text-slate-500">
-                              Target: {skill.targetScore}%
-                            </span>
-                          </div>
+                        {/* Progress Bar */}
+                        <div className="mt-2.5 space-y-1">
                           <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div
                               className={`h-full ${barColor} rounded-full transition-all duration-300`}
@@ -131,10 +141,39 @@ export const SkillsPage: React.FC = () => {
                             />
                           </div>
                         </div>
+
+                        {/* Structured Metadata Grid: Level, Career relevance, Evidence, Gap */}
+                        <div className="mt-3.5 grid grid-cols-2 gap-y-1.5 gap-x-3 text-xs">
+                          <div>
+                            <span className="text-slate-400 dark:text-slate-500">Knowledge: </span>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">
+                              {skill.level}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 dark:text-slate-500">Evidence: </span>
+                            <span className={evidenceColor}>{intel.evidenceLevel}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 dark:text-slate-500">Relevance: </span>
+                            <span className="font-medium text-slate-800 dark:text-slate-200">
+                              {intel.careerRelevance}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 dark:text-slate-500">Gap: </span>
+                            <span className="font-mono font-medium text-slate-800 dark:text-slate-200">
+                              {intel.gapSeverity} ({intel.gapPercent}%)
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                        <span className="truncate">{skill.suggestedProject}</span>
+                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
+                        <span className="truncate">
+                          <strong className="text-slate-800 dark:text-slate-200">Recommended: </strong>
+                          {intel.recommendedAction}
+                        </span>
                         <SlidersHorizontal className="w-3.5 h-3.5 shrink-0 ml-2 text-slate-400 group-hover:text-blue-600" />
                       </div>
                     </button>
@@ -147,12 +186,12 @@ export const SkillsPage: React.FC = () => {
       </div>
 
       {/* Skill Detail Modal */}
-      {activeModalSkill && (
+      {activeModalSkill && activeModalEval && (
         <Modal
           isOpen={Boolean(activeModalSkill)}
           onClose={() => setSelectedSkill(null)}
           title={activeModalSkill.name}
-          subtitle={`${activeModalSkill.category} · Status: ${activeModalSkill.status}`}
+          subtitle={`${activeModalSkill.category} · Relevance: ${activeModalEval.careerRelevance}`}
           maxWidthClass="max-w-xl"
         >
           <div className="space-y-6">
@@ -171,11 +210,29 @@ export const SkillsPage: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Gap</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Gap ({activeModalEval.gapSeverity})</p>
                 <p className="mt-1 text-xl font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums">
-                  {Math.max(0, activeModalSkill.targetScore - activeModalSkill.score)}%
+                  {activeModalEval.gapPercent}%
                 </p>
               </div>
+            </div>
+
+            {/* Knowledge vs Practical Evidence Box (Section 7) */}
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span>Knowledge vs. Practical Evidence</span>
+                </div>
+                <div className="font-mono">
+                  <span>Knowledge: <strong>{activeModalEval.knowledgeLevel}</strong></span>
+                  <span aria-hidden="true"> · </span>
+                  <span>Practical Evidence: <strong>{activeModalEval.evidenceLevel}</strong></span>
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {activeModalEval.knowledgeVsProofNote}
+              </p>
             </div>
 
             {/* Interactive Skill Level / Score Recalculation */}

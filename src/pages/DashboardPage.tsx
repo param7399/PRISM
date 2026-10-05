@@ -19,7 +19,8 @@ import { SkillRadar } from '../components/charts/SkillRadar';
 import { Modal } from '../components/common/Modal';
 import {
   generateCareerInsight,
-  calculateProfileStrengthBreakdown
+  calculateProfileStrengthBreakdown,
+  calculateReadinessBreakdown
 } from '../services/aiService';
 
 export const DashboardPage: React.FC = () => {
@@ -43,6 +44,7 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
   const strengthBreakdown = calculateProfileStrengthBreakdown(student);
+  const readinessPillars = calculateReadinessBreakdown(student);
   const historyGroups: ('Today' | 'Yesterday' | 'This Week')[] = ['Today', 'Yesterday', 'This Week'];
 
   const getSkillScore = (name: string, fallback: number) => {
@@ -69,12 +71,12 @@ export const DashboardPage: React.FC = () => {
   const mentorInsight = generateCareerInsight(student);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-9">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
-            Sunday, October 4, 2026 · {student.college}
+            PRISM Career GPS · {student.college}
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             {student.name?.trim()
@@ -94,93 +96,6 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Top 4 Key Indicators */}
-      <section
-        aria-label="Key Career Readiness Metrics"
-        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800"
-      >
-        <div className="pt-2 sm:pt-0 sm:px-2 first:pl-0">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Career Goal</p>
-          <p className="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-            {student.careerGoal}
-          </p>
-          <button
-            type="button"
-            onClick={() => navigate('/profile')}
-            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Change target role →
-          </button>
-        </div>
-
-        <div className="pt-2 sm:pt-0 sm:px-6">
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              PRISM Career Readiness
-            </p>
-            <span
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-help"
-              title="A demo readiness estimate based on your current profile and selected career goal."
-              aria-label="A demo readiness estimate based on your current profile and selected career goal."
-            >
-              <Info className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          <div className="mt-1.5 flex items-baseline gap-2.5">
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums">
-              {readiness}%
-            </span>
-            <span className="text-xs font-mono font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
-              +{Math.max(8, readiness - 64)}% this month
-            </span>
-          </div>
-          <div className="mt-2.5 w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-600 rounded-full transition-all duration-300"
-              style={{ width: `${readiness}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="pt-4 lg:pt-0 sm:px-6">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Profile Strength</p>
-          <button
-            type="button"
-            onClick={() => setProfileStrengthModalOpen(true)}
-            className="mt-1.5 text-left group flex items-baseline gap-2"
-          >
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 tabular-nums transition-colors">
-              {profileStrength}%
-            </span>
-            <span className="text-xs text-blue-600 dark:text-blue-400 group-hover:underline">
-              Why {profileStrength}%?
-            </span>
-          </button>
-          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-            {student.projects.filter((p) => p.status !== 'Recommended').length} active projects ·{' '}
-            {student.skills.length} skills
-          </p>
-        </div>
-
-        <div className="pt-4 lg:pt-0 sm:px-6">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Important Skill Gaps
-          </p>
-          <div className="mt-1.5 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums">
-              {gaps.length}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">identified</span>
-          </div>
-          <Link
-            to="/gaps"
-            className="mt-1.5 inline-block text-xs text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            View missing skills →
-          </Link>
-        </div>
-      </section>
-
       {/* Live PRISM Loop Demonstration Banner when an action is completed */}
       {lastActionChange && (
         <div
@@ -190,7 +105,7 @@ export const DashboardPage: React.FC = () => {
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300">
               <Sparkles className="w-4 h-4" />
-              <span>YOUR NEXT ACTION CHANGED</span>
+              <span>NICE. THAT CHANGED YOUR READINESS.</span>
               {lastActionChange.skillChange && (
                 <>
                   <span>·</span>
@@ -203,7 +118,7 @@ export const DashboardPage: React.FC = () => {
               </span>
             </div>
             <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              Completed &ldquo;{lastActionChange.previousTitle}&rdquo; → Next up:{' '}
+              Completed &ldquo;{lastActionChange.previousTitle}&rdquo; → New Next Best Action:{' '}
               <span className="text-blue-600 dark:text-blue-400">{lastActionChange.newTitle}</span>
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-300">{lastActionChange.reason}</p>
@@ -219,17 +134,19 @@ export const DashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Focal Card: YOUR NEXT BEST ACTION + 3 THINGS TO FOCUS ON */}
-      <section aria-label="Your Next Best Action and Weekly Focus" className="space-y-4">
+      {/* 1. ACTION-FIRST HERO: NEXT BEST ACTION + 3 THINGS THIS WEEK */}
+      <section aria-label="What should I focus on next?" className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-            Your Next Best Action
-          </h2>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              What should I focus on next?
+            </h2>
+          </div>
           <Link
             to="/next-actions"
             className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
           >
-            View all actions →
+            Open Next Actions →
           </Link>
         </div>
 
@@ -244,7 +161,7 @@ export const DashboardPage: React.FC = () => {
                   </span>
                   <span aria-hidden="true"> · </span>
                   <span className="font-semibold text-red-600 dark:text-red-400">
-                    Priority: {nextBestAction.priority.toUpperCase()}
+                    Priority: {nextBestAction.priority}
                   </span>
                   <span aria-hidden="true"> · </span>
                   <span>Skill gap: {nextBestAction.skill}</span>
@@ -253,7 +170,7 @@ export const DashboardPage: React.FC = () => {
                   <span>Estimated time: {nextBestAction.estimatedTime}</span>
                   <span aria-hidden="true"> · </span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                    +{nextBestAction.expectedReadinessGain}% readiness
+                    Expected readiness impact: +{nextBestAction.expectedReadinessGain}%
                   </span>
                 </div>
               </div>
@@ -262,15 +179,18 @@ export const DashboardPage: React.FC = () => {
                 {nextBestAction.title}
               </h3>
 
-              <div className="mt-4">
-                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Why now?</p>
-                <p className="mt-1 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              {/* Why PRISM chose this */}
+              <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  Why PRISM chose this
+                </p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                   {nextBestAction.whyNow}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
                   type="button"
@@ -311,7 +231,7 @@ export const DashboardPage: React.FC = () => {
                   className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors whitespace-nowrap"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>{nextBestAction.completed ? 'Completed' : 'Complete'}</span>
+                  <span>{nextBestAction.completed ? 'Completed' : 'Mark Complete'}</span>
                 </button>
               </div>
             </div>
@@ -322,7 +242,7 @@ export const DashboardPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <p className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
-                  THIS WEEK · 3 THINGS TO FOCUS ON
+                  THIS WEEK · 3 PRIORITIES
                 </p>
               </div>
 
@@ -367,6 +287,120 @@ export const DashboardPage: React.FC = () => {
               </Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 2. WHERE YOU STAND: Top 4 Key Indicators + 5-Pillar Readiness Breakdown */}
+      <section
+        aria-label="Key Career Readiness Metrics"
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5"
+      >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800">
+          <div className="pt-2 sm:pt-0 sm:px-2 first:pl-0">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Career Goal</p>
+            <p className="mt-1.5 text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+              {student.careerGoal}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate('/profile')}
+              className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Change target role →
+            </button>
+          </div>
+
+          <div className="pt-2 sm:pt-0 sm:px-6">
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                PRISM Career Readiness
+              </p>
+              <span
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-help"
+                title="Demo estimate based on your profile, skills, projects and career goal."
+                aria-label="Demo estimate based on your profile, skills, projects and career goal."
+              >
+                <Info className="w-3.5 h-3.5" />
+              </span>
+            </div>
+            <div className="mt-1.5 flex items-baseline gap-2.5">
+              <span className="text-2xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums">
+                {readiness}%
+              </span>
+              <span className="text-xs font-mono font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
+                +{Math.max(8, readiness - 64)}% this month
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+              Demo estimate based on your profile, skills, projects and career goal.
+            </p>
+          </div>
+
+          <div className="pt-4 lg:pt-0 sm:px-6">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Profile Strength</p>
+            <button
+              type="button"
+              onClick={() => setProfileStrengthModalOpen(true)}
+              className="mt-1.5 text-left group flex items-baseline gap-2"
+            >
+              <span className="text-2xl sm:text-3xl font-mono font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 tabular-nums transition-colors">
+                {profileStrength}%
+              </span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 group-hover:underline">
+                Breakdown →
+              </span>
+            </button>
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+              {student.projects.filter((p) => p.status !== 'Recommended').length} active projects ·{' '}
+              {student.skills.length} skills
+            </p>
+          </div>
+
+          <div className="pt-4 lg:pt-0 sm:px-6">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Important Skill Gaps
+            </p>
+            <div className="mt-1.5 flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                {gaps.length}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">identified</span>
+            </div>
+            <Link
+              to="/gaps"
+              className="mt-1.5 inline-block text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              View missing skills →
+            </Link>
+          </div>
+        </div>
+
+        {/* 5-Pillar Readiness Breakdown Strip */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {readinessPillars.map((pillar) => (
+            <div
+              key={pillar.name}
+              className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800"
+            >
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  {pillar.name}
+                </span>
+                <span className="font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums">
+                  {pillar.score}%
+                </span>
+              </div>
+              <div className="mt-1.5 w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                  style={{ width: `${pillar.score}%` }}
+                />
+              </div>
+              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                {pillar.summary}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 

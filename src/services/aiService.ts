@@ -1,5 +1,6 @@
 import {
   Student,
+  Skill,
   SkillGap,
   NextAction,
   Recommendation,
@@ -59,10 +60,173 @@ export function calculateCareerReadiness(student: Student): number {
 
   const completedActions = student.nextActions.filter((a) => a.completed).length;
   const completedDaily = (student.dailyTasks || []).filter((d) => d.status === 'Completed').length;
-  const actionBonus = completedActions * 2.1 + completedDaily * 1;
+  const actionBonus = completedActions * 2.0 + completedDaily * 1;
 
-  const raw = skillComponent * 0.88 + projectBonus + roadmapBonus + actionBonus + 5.6;
+  const raw = skillComponent * 0.88 + projectBonus + roadmapBonus + actionBonus + 2.4;
   return Math.max(35, Math.min(98, Math.round(raw)));
+}
+
+export interface ReadinessPillar {
+  name: 'Skills' | 'Projects' | 'Experience' | 'Profile' | 'Career Alignment';
+  score: number;
+  weight: string;
+  summary: string;
+}
+
+export function calculateReadinessBreakdown(student: Student): ReadinessPillar[] {
+  const avgSkill =
+    student.skills.length > 0
+      ? Math.round(
+          student.skills.reduce((acc, s) => acc + Math.min(100, (s.score / Math.max(1, s.targetScore)) * 100), 0) /
+            student.skills.length
+        )
+      : 50;
+
+  const completedProjects = student.projects.filter((p) => p.status === 'Completed').length;
+  const inProgressProjects = student.projects.filter((p) => p.status === 'In Progress').length;
+  const projectScore = Math.min(96, 48 + completedProjects * 16 + inProgressProjects * 9);
+
+  const experienceScore = Math.min(
+    95,
+    52 + student.achievements.length * 8 + Math.round(student.dsaSolvedCount / 15)
+  );
+  const profileScore = calculateProfileStrength(student);
+
+  const aiSkills = student.skills.filter((s) => s.category === 'AI / ML' || s.name === 'Python');
+  const alignmentScore =
+    aiSkills.length > 0
+      ? Math.min(
+          96,
+          Math.round(
+            aiSkills.reduce((acc, s) => acc + (s.score / Math.max(1, s.targetScore)) * 100, 0) / aiSkills.length
+          ) + 12
+        )
+      : 68;
+
+  return [
+    {
+      name: 'Skills',
+      score: avgSkill,
+      weight: '35%',
+      summary: `${student.skills.filter((s) => s.score >= 65).length} of ${student.skills.length} skills at Intermediate/Advanced`
+    },
+    {
+      name: 'Projects',
+      score: projectScore,
+      weight: '25%',
+      summary: `${completedProjects} completed, ${inProgressProjects} in-progress portfolio projects`
+    },
+    {
+      name: 'Experience',
+      score: experienceScore,
+      weight: '15%',
+      summary: `${student.achievements.length} hackathons/milestones · ${student.dsaSolvedCount} DSA solved`
+    },
+    {
+      name: 'Profile',
+      score: profileScore,
+      weight: '10%',
+      summary: `${student.certificates.length} verified certificates · GitHub & bio`
+    },
+    {
+      name: 'Career Alignment',
+      score: alignmentScore,
+      weight: '15%',
+      summary: `Direct match with ${student.careerGoal} requirements`
+    }
+  ];
+}
+
+export interface SkillIntelligenceEvaluation {
+  knowledgeLevel: SkillLevel;
+  evidenceLevel: 'Strong' | 'Moderate' | 'Limited';
+  matchingProjects: string[];
+  careerRelevance: 'High' | 'Medium';
+  gapPercent: number;
+  gapSeverity: 'High' | 'Medium' | 'Low';
+  recommendedAction: string;
+  knowledgeVsProofNote: string;
+}
+
+/**
+ * Distinguishes "I know this skill" (Knowledge) from "I have actually built something with this skill" (Practical Evidence).
+ */
+export function evaluateSkillEvidence(student: Student, skill: Skill): SkillIntelligenceEvaluation {
+  const activeProjects = student.projects.filter((p) => p.status !== 'Recommended');
+  const matchingCompleted = activeProjects.filter(
+    (p) =>
+      p.status === 'Completed' &&
+      (p.skillsDemonstrated.some((s) => s.toLowerCase() === skill.name.toLowerCase()) ||
+        p.technologies.some((t) => t.toLowerCase() === skill.name.toLowerCase()))
+  );
+  const matchingInProgress = activeProjects.filter(
+    (p) =>
+      p.status === 'In Progress' &&
+      (p.skillsDemonstrated.some((s) => s.toLowerCase() === skill.name.toLowerCase()) ||
+        p.technologies.some((t) => t.toLowerCase() === skill.name.toLowerCase()))
+  );
+
+  const matchingProjects = [
+    ...matchingCompleted.map((p) => p.name),
+    ...matchingInProgress.map((p) => `${p.name} (In Progress)`)
+  ];
+
+  const evidenceLevel: 'Strong' | 'Moderate' | 'Limited' =
+    matchingCompleted.length > 0
+      ? 'Strong'
+      : matchingInProgress.length > 0
+      ? 'Moderate'
+      : 'Limited';
+
+  const careerRelevance: 'High' | 'Medium' =
+    skill.category === 'AI / ML' ||
+    skill.name === 'Python' ||
+    skill.name === 'DSA' ||
+    skill.name === 'SQL' ||
+    skill.name === 'Communication'
+      ? 'High'
+      : 'Medium';
+
+  const gapPercent = Math.max(0, skill.targetScore - skill.score);
+  const gapSeverity: 'High' | 'Medium' | 'Low' =
+    gapPercent >= 25 ? 'High' : gapPercent >= 10 ? 'Medium' : 'Low';
+
+  let recommendedAction = skill.suggestedProject;
+  let knowledgeVsProofNote = '';
+
+  if (skill.name === 'Machine Learning' && skill.score < 52) {
+    recommendedAction = 'Complete ML Fundamentals';
+    knowledgeVsProofNote =
+      'Both foundational knowledge and practical project proof are currently low.';
+  } else if (skill.name === 'Machine Learning' && skill.score >= 52 && evidenceLevel === 'Limited') {
+    recommendedAction = 'Build an Image Classification Project';
+    knowledgeVsProofNote =
+      'You have the knowledge. Now you need proof — build a project using this skill.';
+  } else if (skill.level !== 'Beginner' && evidenceLevel === 'Limited') {
+    recommendedAction =
+      skill.name === 'DSA'
+        ? 'Solve 15 Medium Graph & DP Problems'
+        : `Build a ${skill.name} project`;
+    knowledgeVsProofNote = `Knowledge is ${skill.level}, but practical project evidence is Limited.`;
+  } else if (evidenceLevel === 'Strong') {
+    knowledgeVsProofNote = `Backed by completed project proof (${matchingCompleted.map((p) => p.name).join(', ')}).`;
+  } else if (evidenceLevel === 'Moderate') {
+    knowledgeVsProofNote = `In-progress evidence via ${matchingInProgress.map((p) => p.name).join(', ')}.`;
+  } else {
+    recommendedAction = `Complete ${skill.name} Fundamentals`;
+    knowledgeVsProofNote = 'Start with core fundamentals before building a full project.';
+  }
+
+  return {
+    knowledgeLevel: skill.level,
+    evidenceLevel,
+    matchingProjects,
+    careerRelevance,
+    gapPercent,
+    gapSeverity,
+    recommendedAction,
+    knowledgeVsProofNote
+  };
 }
 
 export interface ProfileStrengthBreakdown {
@@ -367,11 +531,11 @@ export function generateCareerInsight(student: Student): string {
   );
 
   if (mlFundamentalsDone || (mlSkill && mlSkill.score >= 52)) {
-    return `Your recent progress has shifted your next recommendation from learning to building. With Machine Learning at ${mlSkill?.score ?? 52}% and readiness at ${readiness}%, your biggest opportunity right now is turning your ML knowledge into a real project.`;
+    return `You improved your Machine Learning readiness this week (${mlSkill?.score ?? 52}%), but your practical project evidence is still low. Build one strong ML project before starting another course.`;
   }
 
   if (mlSkill && mlSkill.score < 52) {
-    return `You're strong in programming (Python ${pythonSkill?.score ?? 82}%), but your AI project and ML experience (${mlSkill.score}%) is still limited. You don't need another general programming course right now — focus on Machine Learning fundamentals.`;
+    return `You're strong in programming (Python ${pythonSkill?.score ?? 82}%), but your Machine Learning readiness (${mlSkill.score}%) and practical AI project evidence are still limited. Focus on Machine Learning fundamentals next.`;
   }
   return `Nice momentum! Your Machine Learning foundation is getting stronger, and your readiness is now at ${readiness}%. Focus on shipping your next AI project.`;
 }

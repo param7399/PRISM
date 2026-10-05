@@ -250,7 +250,7 @@ export const NextActionsPage: React.FC = () => {
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors whitespace-nowrap"
               >
                 <Play className="w-4 h-4" />
-                <span>Start Action</span>
+                <span>{nextBestAction.status === 'In Progress' ? 'In Progress' : 'Start This'}</span>
               </button>
 
               <button
@@ -259,7 +259,7 @@ export const NextActionsPage: React.FC = () => {
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors whitespace-nowrap"
               >
                 <HelpCircle className="w-4 h-4 text-slate-500" />
-                <span>Why this?</span>
+                <span>Why This?</span>
               </button>
 
               <button
@@ -275,6 +275,15 @@ export const NextActionsPage: React.FC = () => {
               >
                 <Plus className="w-4 h-4" />
                 <span>Add to Roadmap</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => updateActionStatus(nextBestAction.id, 'Completed')}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors whitespace-nowrap"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{nextBestAction.completed ? 'Completed' : 'Mark Complete'}</span>
               </button>
             </div>
 
@@ -336,39 +345,47 @@ export const NextActionsPage: React.FC = () => {
           {/* IF I ONLY HAVE ONE HOUR TODAY */}
           <section className="bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 space-y-2.5">
             <div className="flex items-center justify-between text-xs font-mono text-blue-400">
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 font-bold uppercase">
                 <Zap className="w-3.5 h-3.5" />
-                <span>If I only have one hour today...</span>
+                <span>IF I ONLY HAVE ONE HOUR TODAY...</span>
               </span>
               <span className="text-slate-400">45–60 minutes</span>
             </div>
-            <h3 className="text-lg font-bold">Solve 5 DSA problems</h3>
+            <h3 className="text-base sm:text-lg font-bold leading-snug">
+              Implement one classification model using scikit-learn and upload the notebook to GitHub.
+            </h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              <strong className="text-white">Reason:</strong> Your DSA readiness is below the
-              target for your career goal, and this is a useful action you can complete today.
+              <strong className="text-white">Why this works:</strong> You have the Python knowledge. Shipping one working classification notebook gives you immediate practical ML proof in under an hour.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => updateDailyTaskStatus('daily-dsa-5', 'In Progress')}
+                onClick={() => updateDailyTaskStatus('daily-ml-supervised', 'In Progress')}
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white transition-colors"
               >
-                Start
+                Start This
+              </button>
+              <button
+                type="button"
+                onClick={() => updateDailyTaskStatus('daily-ml-supervised', 'Completed')}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-800 hover:bg-emerald-900/60 transition-colors"
+              >
+                Mark Complete
               </button>
             </div>
           </section>
         </div>
 
-        {/* Right 7 cols: GOOD THINGS TO DO TODAY (Checklist with Not Started / In Progress / Completed) */}
+        {/* Right 7 cols: TODAY'S ACTIONS (Checklist with Not Started / In Progress / Completed) */}
         <section className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-baseline justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                  Good things to do today
+                  Today&apos;s Actions
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Small daily wins that compound into higher career readiness.
+                  3–4 focused daily steps across Learn, Build, Practice, and Profile.
                 </p>
               </div>
               <span className="text-xs font-mono text-slate-500 tabular-nums">
@@ -437,10 +454,10 @@ export const NextActionsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Your Focus This Week
+              This Week
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Prioritized by PRISM&apos;s skill dependency chain (Python → NumPy/Pandas → ML → Projects → Internships).
+              Ordered by priority using PRISM&apos;s skill dependency chain (Python → NumPy/Pandas → ML → Projects → Internships).
             </p>
           </div>
 
@@ -672,16 +689,16 @@ export const NextActionsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Right 6 cols: YOUR NEXT MILESTONE */}
+        {/* Right 6 cols: NEXT CAREER MILESTONE */}
         <section className="lg:col-span-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5">
           <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
                 <Target className="w-3.5 h-3.5" />
-                <span>NEXT MILESTONE</span>
+                <span>NEXT CAREER MILESTONE</span>
               </div>
-              <h2 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                Internship Ready
+              <h2 className="mt-1 text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                Become ready for your first AI/ML internship project.
               </h2>
             </div>
 

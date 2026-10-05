@@ -48,11 +48,12 @@ const ANALYSIS_STEPS = [
 ];
 
 export const OnboardingPage: React.FC = () => {
-  const { student, completeOnboarding } = usePrism();
+  const { student, readiness, gaps, nextBestAction, completeOnboarding } = usePrism();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showStartingPoint, setShowStartingPoint] = useState(false);
   const [analysisStepIndex, setAnalysisStepIndex] = useState(0);
 
   // Step 1 state
@@ -99,7 +100,7 @@ export const OnboardingPage: React.FC = () => {
     if (analysisStepIndex < ANALYSIS_STEPS.length - 1) {
       const timer = setTimeout(() => {
         setAnalysisStepIndex((prev) => prev + 1);
-      }, 550);
+      }, 500);
       return () => clearTimeout(timer);
     } else {
       const finishTimer = setTimeout(() => {
@@ -146,15 +147,15 @@ export const OnboardingPage: React.FC = () => {
           achievements,
           interests
         });
-        navigate('/dashboard');
-      }, 750);
+        setIsAnalyzing(false);
+        setShowStartingPoint(true);
+      }, 650);
       return () => clearTimeout(finishTimer);
     }
   }, [
     isAnalyzing,
     analysisStepIndex,
     completeOnboarding,
-    navigate,
     name,
     college,
     degree,
@@ -173,6 +174,89 @@ export const OnboardingPage: React.FC = () => {
     student.branch,
     student.skills
   ]);
+
+  const topStrengthSkill =
+    [...student.skills].sort((a, b) => b.score - a.score)[0]?.name || 'Python';
+  const biggestGapSkill = gaps[0]?.skillName || 'Machine Learning';
+
+  if (showStartingPoint) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 px-4 py-8">
+        <div className="max-w-lg w-full p-7 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center shrink-0">
+              <PrismIcon size={24} />
+            </div>
+            <div>
+              <p className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">
+                YOUR PRISM STARTING POINT
+              </p>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+                Here&apos;s where you stand, {student.name}.
+              </h1>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+            <div>
+              <p className="text-slate-500 dark:text-slate-400">Career Goal</p>
+              <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                {student.careerGoal}
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-500 dark:text-slate-400">Readiness</p>
+              <p className="mt-1 text-lg font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums">
+                {readiness}%
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-500 dark:text-slate-400">Top Strength</p>
+              <p className="mt-1 text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                {topStrengthSkill}
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-500 dark:text-slate-400">Biggest Gap</p>
+              <p className="mt-1 text-sm font-bold text-amber-600 dark:text-amber-400">
+                {biggestGapSkill}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-1.5">
+            <p className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 uppercase">
+              First Recommended Action
+            </p>
+            <p className="text-base font-bold text-slate-900 dark:text-white">
+              {nextBestAction.title}
+            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {nextBestAction.whyNow}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/next-actions')}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+            >
+              <span>See My Next Action</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const toggleSkill = (skillName: string) => {
     setSelectedSkills((prev) => {

@@ -34,10 +34,10 @@ export const SkillGapsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            What are you missing?
+            What am I missing for my target career?
           </h1>
           <p className="mt-1 text-sm sm:text-base text-slate-600 dark:text-slate-300">
-            These are the gaps that matter most for your career goal.
+            PRISM groups your missing skills into Critical, Important, and Minor gaps for {student.careerGoal}.
           </p>
         </div>
 
@@ -79,28 +79,68 @@ export const SkillGapsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Top Goal & Readiness Banner */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Target Role Benchmark</p>
-          <h2 className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
-            {student.careerGoal}
-          </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Closing your top 2 high-priority gaps will push your readiness past 80%.
-          </p>
+      {/* Top Goal & Readiness Banner + Critical / Important / Minor Summary */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Target Role Benchmark</p>
+            <h2 className="mt-0.5 text-xl font-bold text-slate-900 dark:text-white">
+              {student.careerGoal}
+            </h2>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Your biggest gap is {gaps[0]?.skillName || 'Machine Learning'}. Closing your Critical Gaps first will push your readiness past 80%.
+            </p>
+          </div>
+          <div className="sm:text-right">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Current Readiness</p>
+            <p className="mt-0.5 text-2xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums">
+              {readiness}%
+            </p>
+          </div>
         </div>
-        <div className="sm:text-right">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Current Readiness</p>
-          <p className="mt-0.5 text-2xl sm:text-3xl font-mono font-bold text-blue-600 dark:text-blue-400 tabular-nums">
-            {readiness}%
-          </p>
+
+        {/* Critical / Important / Minor Gaps Summary */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div className="p-3.5 rounded-xl bg-red-50/60 dark:bg-red-950/20 border border-red-200/70 dark:border-red-900/50 flex items-center justify-between">
+            <div>
+              <p className="font-bold text-red-700 dark:text-red-400">Critical Gaps</p>
+              <p className="text-slate-600 dark:text-slate-400 mt-0.5">Core blockers for {student.careerGoal}</p>
+            </div>
+            <span className="text-lg font-mono font-bold text-red-700 dark:text-red-400 tabular-nums">
+              {gaps.filter((g) => g.priority === 'High').length}
+            </span>
+          </div>
+          <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/50 flex items-center justify-between">
+            <div>
+              <p className="font-bold text-amber-700 dark:text-amber-400">Important Gaps</p>
+              <p className="text-slate-600 dark:text-slate-400 mt-0.5">Strengthens technical interview depth</p>
+            </div>
+            <span className="text-lg font-mono font-bold text-amber-700 dark:text-amber-400 tabular-nums">
+              {gaps.filter((g) => g.priority === 'Medium').length}
+            </span>
+          </div>
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+              <p className="font-bold text-slate-700 dark:text-slate-300">Minor Gaps</p>
+              <p className="text-slate-600 dark:text-slate-400 mt-0.5">Polish &amp; secondary tools</p>
+            </div>
+            <span className="text-lg font-mono font-bold text-slate-700 dark:text-slate-300 tabular-nums">
+              {gaps.filter((g) => g.priority === 'Low').length}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Ranked Gap List */}
       <div className="space-y-5">
         {filteredGaps.map((gapItem, index) => {
+          const priorityLabel =
+            gapItem.priority === 'High'
+              ? 'Critical Gap'
+              : gapItem.priority === 'Medium'
+              ? 'Important Gap'
+              : 'Minor Gap';
+
           const priorityColor =
             gapItem.priority === 'High'
               ? 'text-red-600 dark:text-red-400 font-semibold'
@@ -124,7 +164,7 @@ export const SkillGapsPage: React.FC = () => {
                     </span>
                     <span>{gapItem.category}</span>
                     <span aria-hidden="true">·</span>
-                    <span className={priorityColor}>Priority: {gapItem.priority}</span>
+                    <span className={priorityColor}>{priorityLabel}</span>
                     <span aria-hidden="true">·</span>
                     <span>Est. {gapItem.estimatedTime}</span>
                   </div>
@@ -164,16 +204,17 @@ export const SkillGapsPage: React.FC = () => {
                     style={{ width: `${gapItem.currentScore}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Why it matters: {gapItem.whyItMatters}
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  <strong className="text-slate-800 dark:text-slate-200">Why it matters: </strong>
+                  {gapItem.whyItMatters}
                 </p>
               </div>
 
-              {/* What to learn + Suggested Project */}
+              {/* What to learn + Recommended Action */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
                 <div className="lg:col-span-7">
                   <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                    What to learn
+                    Topics to cover
                   </p>
                   <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                     {gapItem.whatToLearn.join(' · ')}
@@ -183,9 +224,9 @@ export const SkillGapsPage: React.FC = () => {
                 <div className="lg:col-span-5 flex flex-col justify-between">
                   <div>
                     <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                      Suggested project
+                      Recommended Action
                     </p>
-                    <p className="mt-1 text-sm text-blue-600 dark:text-blue-400 font-medium">
+                    <p className="mt-1 text-sm text-blue-600 dark:text-blue-400 font-semibold">
                       {gapItem.suggestedProject}
                     </p>
                   </div>

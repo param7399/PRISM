@@ -115,8 +115,8 @@ export const ProjectsPage: React.FC = () => {
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             You haven&apos;t added a project yet.
           </h2>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Start with something you&apos;ve already built.
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Add a project you&apos;ve already built so PRISM can understand your practical experience.
           </p>
           <button
             type="button"
@@ -130,6 +130,12 @@ export const ProjectsPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredProjects.map((project) => {
             const isRecommended = project.status === 'Recommended';
+            const evidenceStrength =
+              project.status === 'Completed'
+                ? 'Strong Portfolio Proof'
+                : project.status === 'In Progress'
+                ? 'Active Proof (In Progress)'
+                : 'Recommended Proof';
             const statusTextClass =
               project.status === 'Completed'
                 ? 'text-emerald-600 dark:text-emerald-400 font-semibold'
@@ -151,6 +157,7 @@ export const ProjectsPage: React.FC = () => {
                     <span className={statusTextClass}>
                       {project.status}
                       {project.matchPercentage ? ` · ${project.matchPercentage}% Match` : ''}
+                      <span className="text-slate-400 font-normal"> · {project.difficulty || 'Intermediate'}</span>
                     </span>
                     <span className="font-mono text-slate-500 tabular-nums">
                       {isRecommended
@@ -173,10 +180,21 @@ export const ProjectsPage: React.FC = () => {
                     {project.shortDescription}
                   </p>
 
-                  {/* Unboxed technology metadata with typographic separators */}
-                  <p className="mt-3 text-xs font-mono text-slate-500 dark:text-slate-400">
-                    {project.technologies.join(' · ')}
-                  </p>
+                  {/* Technologies & Skills this project proves */}
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+                    <p className="font-mono text-slate-500 dark:text-slate-400">
+                      <strong className="text-slate-700 dark:text-slate-300 font-sans">Stack: </strong>
+                      {project.technologies.join(' · ')}
+                    </p>
+                    <p className="text-slate-600 dark:text-slate-300">
+                      <strong className="text-slate-800 dark:text-slate-200">Skills this project proves: </strong>
+                      {project.skillsDemonstrated.join(' · ')}
+                    </p>
+                    <p className="text-slate-500 dark:text-slate-400">
+                      <strong className="text-slate-700 dark:text-slate-300">Evidence strength: </strong>
+                      {evidenceStrength}
+                    </p>
+                  </div>
 
                   {isRecommended && project.whyRecommended && (
                     <p className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
@@ -306,7 +324,7 @@ export const ProjectsPage: React.FC = () => {
               </div>
               <div>
                 <h4 className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  Skills demonstrated
+                  Skills this project proves
                 </h4>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                   {activeModalProject.skillsDemonstrated.join(' · ')}

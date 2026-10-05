@@ -96,11 +96,11 @@ interface PrismContextType {
 const PrismContext = createContext<PrismContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  STUDENT: 'prism_student_v3',
-  AUTH: 'prism_auth_v3',
-  ONBOARDING: 'prism_onboarded_v3',
-  THEME: 'prism_theme_v3',
-  NEXT_ACTIONS_FILTER: 'prism_next_actions_filter_v3'
+  STUDENT: 'prism_student_v4',
+  AUTH: 'prism_auth_v4',
+  ONBOARDING: 'prism_onboarded_v4',
+  THEME: 'prism_theme_v4',
+  NEXT_ACTIONS_FILTER: 'prism_next_actions_filter_v4'
 };
 
 export const PrismProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

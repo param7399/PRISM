@@ -157,12 +157,12 @@ export const OpportunitiesPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => addOpportunityToNextActions(opp.id)}
-                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors whitespace-nowrap"
+                      className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors whitespace-nowrap"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>
                         {missingSkills.length > 0
-                          ? 'Add preparation steps to Next Actions'
+                          ? 'Prepare for this'
                           : 'Add to Next Actions'}
                       </span>
                     </button>

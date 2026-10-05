@@ -24,27 +24,27 @@ const NAV_GROUPS = [
   {
     label: 'Overview',
     items: [
-      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/next-actions', label: 'Next Best Actions', icon: ListChecks },
-      { to: '/skills', label: 'My Skills', icon: Cpu },
-      { to: '/gaps', label: 'Skill Gaps', icon: Target },
-      { to: '/roadmap', label: 'Roadmap', icon: Map }
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, highlight: false },
+      { to: '/next-actions', label: 'Next Actions', icon: ListChecks, highlight: true },
+      { to: '/skills', label: 'Skills', icon: Cpu, highlight: false },
+      { to: '/gaps', label: 'Skill Gaps', icon: Target, highlight: false },
+      { to: '/roadmap', label: 'Roadmap', icon: Map, highlight: false }
     ]
   },
   {
     label: 'My Work',
     items: [
-      { to: '/projects', label: 'Projects', icon: FolderGit2 },
-      { to: '/opportunities', label: 'Opportunities', icon: Briefcase }
+      { to: '/projects', label: 'Projects', icon: FolderGit2, highlight: false },
+      { to: '/opportunities', label: 'Opportunities', icon: Briefcase, highlight: false }
     ]
   },
   {
     label: 'Insights',
-    items: [{ to: '/analytics', label: 'Analytics', icon: LineChart }]
+    items: [{ to: '/analytics', label: 'Analytics', icon: LineChart, highlight: false }]
   },
   {
     label: 'Account',
-    items: [{ to: '/profile', label: 'Profile', icon: User }]
+    items: [{ to: '/profile', label: 'Profile', icon: User, highlight: false }]
   }
 ];
 
@@ -108,15 +108,24 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       key={item.to}
                       to={item.to}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        `flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                           isActive
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : item.highlight
+                            ? 'bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/70 hover:bg-blue-100/80'
                             : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                         }`
                       }
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
-                      <span className="truncate">{item.label}</span>
+                      <span className="flex items-center gap-3 min-w-0">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </span>
+                      {item.highlight && (
+                        <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded bg-blue-600/15 dark:bg-blue-400/20">
+                          GPS
+                        </span>
+                      )}
                     </NavLink>
                   );
                 })}
